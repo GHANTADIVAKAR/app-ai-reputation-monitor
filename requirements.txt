@@ -1,5 +1,5 @@
 google-api-python-client==2.169.0
-google-auth==2.40.1
+google-auth==2.49.2
 python-dotenv==1.1.0
 youtube-transcript-api==1.2.3
 openai==2.37.0
