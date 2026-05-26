@@ -12,7 +12,8 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
 ROOT = Path(__file__).resolve().parents[1]
-DB_PATH = ROOT / "data" / "live_app.sqlite3"
+DATA_DIR = Path(os.getenv("LIVE_DATA_DIR", str(ROOT / "data"))).expanduser()
+DB_PATH = Path(os.getenv("LIVE_DB_PATH", str(DATA_DIR / "live_app.sqlite3"))).expanduser()
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 TAB_NAME = "Dragon_YouTube_Today"
 

@@ -11,6 +11,7 @@ sys.path.insert(0, str(ROOT))
 
 from live_app.app import analyze_project, analyze_project_text, app, collect_youtube, db, init_db  # noqa: E402
 from scripts.build_live_report_dashboard import main as build_report  # noqa: E402
+from scripts.export_dragon_youtube_today_sheet import main as export_sheet  # noqa: E402
 
 
 def main() -> int:
@@ -48,8 +49,14 @@ def main() -> int:
 
             try:
                 build_report()
+                print("[APP.AI worker] report rebuilt", flush=True)
             except Exception as error:
                 print(f"[APP.AI worker] report build failed: {str(error)[:500]}", flush=True)
+            try:
+                export_sheet()
+                print("[APP.AI worker] Google Sheet refreshed", flush=True)
+            except Exception as error:
+                print(f"[APP.AI worker] Google Sheet refresh failed: {str(error)[:500]}", flush=True)
 
         if once:
             return 0
