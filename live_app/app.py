@@ -775,7 +775,10 @@ def collect_youtube(project: sqlite3.Row, hours: int) -> dict[str, int]:
 
 def search_youtube(youtube: Any, project: sqlite3.Row, published_after: datetime) -> dict[str, dict[str, str]]:
     found = {}
-    for keyword in split_lines(project["keywords"])[:35]:
+    keywords = split_lines(project["keywords"])[:35]
+    retry_sleep = int(os.getenv("YOUTUBE_RATE_LIMIT_SLEEP_SECONDS", "15"))
+    for index, keyword in enumerate(keywords, start=1):
+        print(f"[APP.AI worker] youtube keyword {index}/{len(keywords)}: {keyword}", flush=True)
         for attempt in range(3):
             try:
                 response = youtube.search().list(
@@ -791,7 +794,8 @@ def search_youtube(youtube: Any, project: sqlite3.Row, published_after: datetime
                 break
             except HttpError as error:
                 if error.resp.status in {403, 429} and attempt < 2 and "rateLimitExceeded" in str(error):
-                    time.sleep(70)
+                    print(f"[APP.AI worker] YouTube rate limited, retrying keyword after {retry_sleep}s", flush=True)
+                    time.sleep(retry_sleep)
                     continue
                 raise
         for item in response.get("items", []):
