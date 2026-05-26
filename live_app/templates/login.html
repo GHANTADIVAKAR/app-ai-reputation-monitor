@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>APP.AI Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+</head>
+<body class="login-body">
+  <section class="login-panel">
+    <div class="brand login-brand">
+      <span class="brand-mark">A</span>
+      <span>
+        <strong>APP.AI</strong>
+        <small>Live intelligence workspace</small>
+      </span>
+    </div>
+    <h1>Client reputation dashboard</h1>
+    <p>Login to scan YouTube, prioritize high-impact channels, and run audio-based narrative analysis.</p>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for message in messages %}
+          <div class="flash">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    <form method="post" class="form">
+      <label>Email <input name="email" type="email" value="admin@app.ai" required></label>
+      <label>Password <input name="password" type="password" value="appai123" required></label>
+      <button class="primary" type="submit">Login</button>
+    </form>
+  </section>
+</body>
+</html>

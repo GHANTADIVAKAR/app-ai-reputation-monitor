@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <p class="eyebrow">AI-Powered Reputation Management</p>
+    <h1>Celebrity ORM Command Center</h1>
+    <p>Monitor YouTube narratives, prioritize high-reach channels, and prepare client-ready intelligence reports from one live workspace.</p>
+  </div>
+  {% if g.user.role == 'admin' %}
+  <a class="primary link-button" href="{{ url_for('new_project') }}">Create Project</a>
+  {% endif %}
+</header>
+
+<section class="feature-strip">
+  <article><span>24/7 Monitoring</span><strong>Live YouTube discovery</strong></article>
+  <article><span>AI Sentiment</span><strong>Audio-first narrative analysis</strong></article>
+  <article><span>Crisis Signals</span><strong>Priority risk queue</strong></article>
+</section>
+
+<section class="project-grid">
+  {% for project in projects %}
+  <article class="project-card">
+    <div class="project-top">
+      <span class="pill">{{ project.target_type }}</span>
+      <span class="muted">Threshold {{ project.subscriber_threshold|fmt_int }}+</span>
+    </div>
+    <h2>{{ project.name }}</h2>
+    <p>{{ project.description or "Live YouTube reputation and narrative monitoring." }}</p>
+    <div class="project-meta">
+      <span>{{ project.keywords.split('\n')|length }} keywords</span>
+      <span>Updated {{ project.updated_at|local_time }}</span>
+    </div>
+    <a class="secondary link-button" href="{{ url_for('project_dashboard', project_id=project.id) }}">Open Dashboard</a>
+  </article>
+  {% else %}
+  <div class="empty-state">
+    <h2>No projects yet</h2>
+    <p>Create your first client monitor to begin collecting live data.</p>
+  </div>
+  {% endfor %}
+</section>
+{% endblock %}

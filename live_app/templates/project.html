@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <p class="eyebrow">{{ project.target_type }} Reputation Monitor</p>
+    <h1>{{ project.name }}</h1>
+    <p>{{ project.description }} Live reports are separated into daily, weekly, and monthly intelligence views.</p>
+  </div>
+  <div class="project-links">
+    <a class="secondary link-button" href="{{ url_for('review_queue', project_id=project.id) }}">Review & Accuracy</a>
+    <a class="secondary link-button" href="{{ url_for('social_dashboard', project_id=project.id) }}">Social Sources</a>
+    {% if g.user.role in ['admin', 'client_admin'] %}
+    <a class="secondary link-button" href="{{ url_for('alerts', project_id=project.id) }}">Alerts</a>
+    {% endif %}
+    {% if g.user.role == 'admin' %}
+    <a class="secondary link-button" href="{{ url_for('data_sources', project_id=project.id) }}">Data Sources</a>
+    {% endif %}
+  </div>
+  {% if g.user.role in ['admin', 'client_admin'] %}
+  <div class="actions">
+    <form method="post" action="{{ url_for('run_project_scan', project_id=project.id) }}">
+      <input type="hidden" name="hours" value="24">
+      <button class="primary" type="submit">Scan Last 24 Hours</button>
+    </form>
+    <form method="post" action="{{ url_for('run_project_analysis', project_id=project.id) }}" class="inline-form">
+      <input name="limit" type="number" value="5" min="1" max="30">
+      <label class="check"><input type="checkbox" name="priority_only" checked> Priority only</label>
+      <button class="secondary" type="submit">Analyze Audio</button>
+    </form>
+    <form method="post" action="{{ url_for('run_project_text_analysis', project_id=project.id) }}" class="inline-form">
+      <input name="limit" type="number" value="25" min="1" max="200">
+      <label class="check"><input type="checkbox" name="priority_only"> Priority only</label>
+      <button class="secondary" type="submit">Analyze Text</button>
+    </form>
+  </div>
+  {% endif %}
+</header>
+
+<section class="period-tabs">
+  <a class="{{ 'active' if period == 'daily' else '' }}" href="{{ url_for('project_dashboard', project_id=project.id, period='daily') }}">Daily</a>
+  <a class="{{ 'active' if period == 'weekly' else '' }}" href="{{ url_for('project_dashboard', project_id=project.id, period='weekly') }}">Weekly</a>
+  <a class="{{ 'active' if period == 'monthly' else '' }}" href="{{ url_for('project_dashboard', project_id=project.id, period='monthly') }}">Monthly</a>
+</section>
+
+<section class="metric-grid">
+  <article><span>Total Mentions</span><strong>{{ stats.total|fmt_int }}</strong><small>{{ period }} window</small></article>
+  <article><span>Priority Videos</span><strong>{{ stats.priority|fmt_int }}</strong><small>{{ project.subscriber_threshold|fmt_int }}+ subscriber channels</small></article>
+  <article><span>Audio Analyzed</span><strong>{{ stats.analyzed|fmt_int }}</strong><small>Gemini audio evidence</small></article>
+  <article class="risk"><span>Risk Score</span><strong>{{ stats.risk }}%</strong><small>negative + mixed pressure</small></article>
+</section>
+
+<section class="dashboard-grid">
+  <article class="panel chart-panel">
+    <div class="panel-head">
+      <h2>Sentiment Split</h2>
+      <p>Based on completed analysis rows.</p>
+    </div>
+    <canvas id="sentimentChart" width="280" height="280"></canvas>
+  </article>
+  <article class="panel">
+    <div class="panel-head">
+      <h2>Scan History</h2>
+      <p>Every run is stored in the database.</p>
+    </div>
+    <div class="scan-list">
+      {% for scan in scans %}
+      <div>
+        <strong>{{ scan.status }}</strong>
+        <span>{{ scan.started_at|local_time }}</span>
+        <small>{{ scan.found_count|fmt_int }} found, {{ scan.new_count|fmt_int }} new</small>
+      </div>
+      {% else %}
+      <p class="muted">No scans yet. Run the first scan from the button above.</p>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+
+<section class="panel table-panel">
+  <div class="panel-head">
+    <h2>Video Intelligence Queue</h2>
+    <p>High-subscriber channels are prioritized for audio download and Gemini narrative analysis.</p>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Priority</th>
+          <th>Video</th>
+          <th>Channel</th>
+          <th>Reach</th>
+          <th>Sentiment</th>
+          <th>Risk / Narrative</th>
+          <th>Evidence</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for video in videos %}
+        <tr>
+          <td><span class="status {{ video.audio_priority }}">{{ video.audio_priority }}</span></td>
+          <td>
+            <a href="{{ video.url }}" target="_blank" rel="noreferrer">{{ video.title }}</a>
+            <small>{{ video.published_at|local_time }} · {{ video.youtube_type }}</small>
+          </td>
+          <td>{{ video.channel_title }}<small>{{ video.subscriber_count|fmt_int }} subscribers</small></td>
+          <td>{{ video.views|fmt_int }} views<small>{{ video.comments|fmt_int }} comments</small></td>
+          <td><span class="sentiment {{ video.sentiment or 'unknown' }}">{{ video.sentiment or 'pending' }}</span><small>{{ video.positive_pct or 0 }} / {{ video.negative_pct or 0 }} / {{ video.neutral_pct or 0 }}</small></td>
+          <td>{{ video.narrative_label or "Pending analysis" }}<small>{{ video.narrative_summary or video.priority_reason }}</small></td>
+          <td>{{ video.evidence_source or video.analysis_status or "not analyzed" }}{% if video.error %}<small class="error">{{ video.error }}</small>{% endif %}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="empty-row">No videos in this project yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<script>
+const values = {{ chart_values(stats)|tojson }};
+new Chart(document.getElementById('sentimentChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Positive', 'Negative', 'Neutral', 'Mixed', 'Unknown'],
+    datasets: [{
+      data: [values.positive, values.negative, values.neutral, values.mixed, values.unknown],
+      backgroundColor: ['#19a974', '#dc3d4b', '#7c8a9a', '#f5a524', '#d5dae2'],
+      borderWidth: 0
+    }]
+  },
+  options: {
+    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } } },
+    cutout: '64%'
+  }
+});
+</script>
+{% endblock %}

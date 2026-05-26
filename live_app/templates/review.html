@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Quality Control</p>
+    <h1>Review & Accuracy</h1>
+    <p>Human review creates the benchmark dataset that proves the product is trustworthy.</p>
+  </div>
+  {% if g.user.role in ['admin', 'client_admin'] %}
+  <form method="post" action="{{ url_for('verify_project', project_id=project.id) }}" class="inline-form">
+    <input name="limit" type="number" min="1" max="50" value="10">
+    <button class="primary" type="submit">Second Model Verify</button>
+  </form>
+  {% endif %}
+</header>
+
+<section class="metric-grid">
+  <article><span>Human Labels</span><strong>{{ stats.total }}</strong><small>manual review rows</small></article>
+  <article><span>AI Matches</span><strong>{{ stats.matches }}</strong><small>same as human label</small></article>
+  <article><span>Accuracy</span><strong>{{ stats.accuracy }}%</strong><small>on reviewed dataset</small></article>
+  <article><span>Mode</span><strong>QA</strong><small>audit first, automate second</small></article>
+</section>
+
+<section class="panel table-panel">
+  <div class="panel-head">
+    <h2>Review Queue</h2>
+    <p>Prioritized by risky sentiment, missing review, subscriber count, and reach.</p>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Video</th><th>AI Result</th><th>Second Model</th><th>Human Review</th></tr></thead>
+      <tbody>
+        {% for video in videos %}
+        <tr>
+          <td>
+            <a href="{{ video.url }}" target="_blank" rel="noreferrer">{{ video.title }}</a>
+            <small>{{ video.channel_title }} · {{ video.views|fmt_int }} views · {{ video.evidence_source or 'pending' }}</small>
+          </td>
+          <td><span class="sentiment {{ video.sentiment or 'unknown' }}">{{ video.sentiment or 'pending' }}</span><small>{{ video.positive_pct or 0 }} / {{ video.negative_pct or 0 }} / {{ video.neutral_pct or 0 }}</small><small>{{ video.reason }}</small></td>
+          <td>{{ video.verification_status or 'not verified' }}{% if video.verification_sentiment %}<small>{{ video.verification_sentiment }} · agree={{ video.agrees_with_primary }}</small>{% endif %}<small>{{ video.verification_reason or '' }}</small></td>
+          <td>
+            {% if video.review_sentiment %}
+              <strong>{{ video.review_sentiment }}</strong><small>{{ video.action_status }} · {{ video.review_note }}</small>
+            {% endif %}
+            <form method="post" class="review-form">
+              <input type="hidden" name="video_id" value="{{ video.id }}">
+              <select name="review_sentiment">
+                <option value="positive">Positive</option>
+                <option value="negative">Negative</option>
+                <option value="neutral">Neutral</option>
+                <option value="mixed">Mixed</option>
+              </select>
+              <select name="action_status">
+                <option value="reviewed">Reviewed</option>
+                <option value="needs_pr_action">Needs PR action</option>
+                <option value="needs_legal_review">Needs legal review</option>
+                <option value="ignore">Ignore</option>
+              </select>
+              <input name="review_note" placeholder="Human note">
+              <button class="secondary" type="submit">Save</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

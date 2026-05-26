@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Data Sources</p>
+    <h1>Source Configuration</h1>
+    <p>Use this to prepare YouTube, X, Meta, web/news, and future connectors project by project.</p>
+  </div>
+</header>
+
+<form method="post" class="builder-form">
+  <div class="two-col">
+    <label>Source
+      <select name="source_type">
+        <option value="youtube">YouTube</option>
+        <option value="x">X / Twitter</option>
+        <option value="instagram">Instagram</option>
+        <option value="facebook">Facebook</option>
+        <option value="web_news">Web / News</option>
+      </select>
+    </label>
+    <label>Status
+      <select name="status"><option value="planned">Planned</option><option value="active">Active</option><option value="blocked">Blocked</option></select>
+    </label>
+  </div>
+  <label>Config JSON
+    <textarea name="config_json" rows="6" placeholder='{"hashtags":["#DragonGlimpse"],"handles":[]}'>{}</textarea>
+  </label>
+  <button class="primary" type="submit">Save Source</button>
+</form>
+
+<section class="panel table-panel">
+  <div class="panel-head"><h2>Configured Sources</h2></div>
+  <div class="table-wrap"><table><thead><tr><th>Source</th><th>Status</th><th>Config</th><th>Updated</th></tr></thead><tbody>
+    {% for source in sources %}
+    <tr><td>{{ source.source_type }}</td><td>{{ source.status }}</td><td><pre>{{ source.config_json }}</pre></td><td>{{ source.updated_at|local_time }}</td></tr>
+    {% endfor %}
+  </tbody></table></div>
+</section>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Access</p>
+    <h1>Client Logins</h1>
+    <p>Create separate credentials for clients, partners, or internal team members.</p>
+  </div>
+  <a class="primary link-button" href="{{ url_for('new_user') }}">Create Login</a>
+</header>
+
+<section class="panel table-panel">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Email</th><th>Role</th><th>Created</th></tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr>
+          <td>{{ user.email }}</td>
+          <td><span class="pill">{{ user.role }}</span></td>
+          <td>{{ user.created_at|local_time }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

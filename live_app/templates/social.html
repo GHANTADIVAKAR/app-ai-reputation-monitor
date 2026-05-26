@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Multi-Platform Intelligence</p>
+    <h1>Social Sources</h1>
+    <p>X and Instagram items are stored separately from YouTube, then analyzed through the same sentiment and review pipeline.</p>
+  </div>
+</header>
+
+<section class="metric-grid">
+  <article><span>Total Items</span><strong>{{ counts.total }}</strong><small>X / Instagram / future web</small></article>
+  <article><span>Analyzed</span><strong>{{ counts.done }}</strong><small>Gemini text/metadata analysis</small></article>
+  <article><span>Failed</span><strong>{{ counts.failed }}</strong><small>provider or AI issues</small></article>
+  <article><span>Sources</span><strong>{{ counts.by_source|length }}</strong><small>active providers</small></article>
+</section>
+
+<section class="dashboard-grid">
+  <article class="panel chart-panel">
+    <div class="panel-head"><h2>Social Sentiment</h2><p>Based on social item analyses.</p></div>
+    <canvas id="socialChart"></canvas>
+  </article>
+  <article class="panel">
+    <div class="panel-head"><h2>Source Coverage</h2><p>Items collected by source.</p></div>
+    <div class="scan-list">
+      {% for source, count in counts.by_source.items() %}
+      <div><strong>{{ source }}</strong><span>{{ count }} items</span><small>configured provider</small></div>
+      {% else %}
+      <p class="muted">No social items collected yet.</p>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+
+<section class="panel table-panel">
+  <div class="panel-head">
+    <h2>Social Intelligence Queue</h2>
+    <p>Text, caption, metadata and future media evidence from non-YouTube platforms.</p>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Source</th><th>Post</th><th>Author</th><th>Reach</th><th>Sentiment</th><th>Evidence</th><th>Summary</th></tr></thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td><span class="pill">{{ row.source_type }}</span></td>
+          <td>{% if row.url %}<a href="{{ row.url }}" target="_blank" rel="noreferrer">{{ row.title or row.text }}</a>{% else %}{{ row.title or row.text }}{% endif %}<small>{{ row.keyword }} · {{ row.media_type }}</small></td>
+          <td>{{ row.author or '-' }}</td>
+          <td>{{ row.views|fmt_int }} views<small>{{ row.likes|fmt_int }} likes · {{ row.comments|fmt_int }} comments</small></td>
+          <td><span class="sentiment {{ row.sentiment or 'unknown' }}">{{ row.sentiment or 'pending' }}</span><small>{{ row.positive_pct or 0 }} / {{ row.negative_pct or 0 }} / {{ row.neutral_pct or 0 }}</small></td>
+          <td>{{ row.evidence_source or row.analysis_status or 'pending' }}<small>{{ row.provider or '' }}</small></td>
+          <td>{{ row.summary or row.error or row.text or row.caption }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="empty-row">No social items yet. Run the social ingestion script first.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<script>
+const values = {{ counts.by_sentiment|tojson }};
+new Chart(document.getElementById('socialChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Positive', 'Negative', 'Neutral', 'Mixed', 'Unknown', 'Pending'],
+    datasets: [{
+      data: [values.positive, values.negative, values.neutral, values.mixed, values.unknown, values.pending],
+      backgroundColor: ['#19a974', '#dc3d4b', '#7c8a9a', '#f5a524', '#d5dae2', '#94a3b8'],
+      borderWidth: 0
+    }]
+  },
+  options: { plugins: { legend: { position: 'bottom' } }, cutout: '64%' }
+});
+</script>
+{% endblock %}

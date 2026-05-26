@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reputation Intelligence</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-mark">RI</span>
+        <div>
+          <strong>Reputation Intel</strong>
+          <small>AI sentiment monitor</small>
+        </div>
+      </div>
+
+      <form id="target-form" class="target-form">
+        <label>
+          Track
+          <input id="target-name" name="name" placeholder="Person, movie, party, brand" required />
+        </label>
+        <label>
+          Type
+          <select id="target-type" name="type">
+            <option value="celebrity">Celebrity</option>
+            <option value="movie">Movie</option>
+            <option value="politician">Politician</option>
+            <option value="brand">Brand</option>
+            <option value="organization">Organization</option>
+          </select>
+        </label>
+        <label>
+          Query themes
+          <input id="target-queries" name="queries" placeholder="reviews, controversy, interview" />
+        </label>
+        <button type="submit">Add Target</button>
+      </form>
+
+      <div>
+        <p class="eyebrow">Targets</p>
+        <div id="target-list" class="target-list"></div>
+      </div>
+    </aside>
+
+    <main class="app">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Live Dashboard</p>
+          <h1 id="page-title">Public Sentiment Monitor</h1>
+          <div id="target-images" class="target-images"></div>
+          <div id="source-status" class="source-status">Waiting for first scan</div>
+        </div>
+        <button id="scan-button" class="primary">Run Scan</button>
+      </header>
+
+      <section class="metrics">
+        <article>
+          <span>Total Mentions</span>
+          <strong id="metric-total">0</strong>
+        </article>
+        <article>
+          <span>Positive</span>
+          <strong id="metric-positive">0</strong>
+        </article>
+        <article>
+          <span>Negative</span>
+          <strong id="metric-negative">0</strong>
+        </article>
+        <article>
+          <span>Mixed / Neutral</span>
+          <strong id="metric-neutral">0</strong>
+        </article>
+      </section>
+
+      <section class="grid two">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Sentiment Trend</h2>
+            <span>Last scans</span>
+          </div>
+          <canvas id="trend-chart" width="700" height="260"></canvas>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Risk Alerts</h2>
+            <span>PR priority</span>
+          </div>
+          <div id="alerts" class="stack"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Search Map</h2>
+          <span>Keywords, hashtags, handles</span>
+        </div>
+        <div id="search-map" class="keyword-groups"></div>
+      </section>
+
+      <section class="grid two">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Top 20 Negative</h2>
+            <span>Needs attention</span>
+          </div>
+          <div id="top-negative" class="stack"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Top 20 Positive</h2>
+            <span>Can amplify</span>
+          </div>
+          <div id="top-positive" class="stack"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Top 20 Neutral</h2>
+          <span>Useful for verification</span>
+        </div>
+        <div id="top-neutral" class="stack"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Latest Mentions</h2>
+          <span>Links, summaries, actions</span>
+        </div>
+        <div id="mentions" class="mentions"></div>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

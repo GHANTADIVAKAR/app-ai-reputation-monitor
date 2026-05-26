@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thalapathy Vijay YouTube Intelligence Demo</title>
+    <script src="/youtube_dashboard_embedded.js"></script>
+    <style>
+      :root {
+        --bg: #f4f6f8;
+        --panel: #ffffff;
+        --ink: #111827;
+        --muted: #667085;
+        --line: #dde3eb;
+        --green: #15803d;
+        --red: #b42318;
+        --amber: #b54708;
+        --blue: #1d4ed8;
+        --teal: #0f766e;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      a { color: inherit; }
+
+      .hero {
+        position: relative;
+        overflow: hidden;
+        min-height: 78vh;
+        display: flex;
+        align-items: end;
+        padding: 32px;
+        color: white;
+        background:
+          linear-gradient(90deg, rgba(10, 15, 25, 0.88), rgba(10, 15, 25, 0.56) 48%, rgba(10, 15, 25, 0.16)),
+          linear-gradient(180deg, rgba(10, 15, 25, 0.1), rgba(10, 15, 25, 0.86)),
+          url("assets/thalapathy-vijay.jpg");
+        background-position: center;
+        background-size: cover;
+      }
+
+      .hero-inner {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: minmax(0, 0.95fr) minmax(320px, 0.62fr);
+        gap: 32px;
+        align-items: end;
+        width: min(1180px, 100%);
+        margin: 0 auto;
+      }
+
+      .hero-person {
+        justify-self: end;
+        width: min(410px, 100%);
+      }
+
+      .hero-person img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 4 / 5;
+        border: 1px solid rgba(255, 255, 255, 0.26);
+        border-radius: 8px;
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+        object-fit: cover;
+        object-position: center top;
+      }
+
+      .hero-person span {
+        display: block;
+        margin-top: 8px;
+        color: rgba(255, 255, 255, 0.74);
+        font-size: 12px;
+        text-align: right;
+      }
+
+      .eyebrow {
+        margin: 0 0 10px;
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        max-width: 860px;
+        margin: 0;
+        font-size: clamp(38px, 7vw, 82px);
+        line-height: 0.95;
+        letter-spacing: 0;
+      }
+
+      .hero-copy {
+        max-width: 760px;
+        margin: 18px 0 24px;
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 18px;
+        line-height: 1.55;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        border-radius: 8px;
+        padding: 0 16px;
+        background: white;
+        color: var(--ink);
+        font-weight: 800;
+        text-decoration: none;
+      }
+
+      .btn.secondary {
+        border: 1px solid rgba(255, 255, 255, 0.34);
+        background: rgba(255, 255, 255, 0.08);
+        color: white;
+      }
+
+      .page {
+        width: min(1180px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 22px 0 48px;
+      }
+
+      .section {
+        margin-top: 18px;
+      }
+
+      .section-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: end;
+        margin: 0 0 12px;
+      }
+
+      .section-head h2 {
+        margin: 0;
+        font-size: 24px;
+      }
+
+      .section-head span,
+      .muted {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .card,
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+      }
+
+      .card {
+        padding: 18px;
+      }
+
+      .card span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .card strong {
+        display: block;
+        margin-top: 8px;
+        font-size: 32px;
+      }
+
+      .card small {
+        display: block;
+        margin-top: 8px;
+        color: var(--muted);
+        line-height: 1.35;
+      }
+
+      .grid {
+        display: grid;
+        gap: 16px;
+      }
+
+      .grid.two {
+        grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+      }
+
+      .grid.three {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .panel {
+        padding: 18px;
+      }
+
+      .panel h3 {
+        margin: 0 0 12px;
+        font-size: 18px;
+      }
+
+      canvas {
+        width: 100%;
+        max-height: 320px;
+      }
+
+      .risk-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .risk-item {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fbfcfe;
+        padding: 12px;
+      }
+
+      .risk-item a {
+        display: block;
+        color: var(--ink);
+        font-weight: 800;
+        line-height: 1.35;
+        text-decoration: none;
+      }
+
+      .summary {
+        margin: 8px 0;
+        color: #344054;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: white;
+        color: var(--muted);
+        font-size: 12px;
+        padding: 0 9px;
+      }
+
+      .chip.danger {
+        border-color: rgba(180, 35, 24, 0.2);
+        background: rgba(180, 35, 24, 0.08);
+        color: var(--red);
+        font-weight: 800;
+      }
+
+      .method {
+        display: grid;
+        gap: 12px;
+      }
+
+      .method-step {
+        border-left: 4px solid var(--blue);
+        padding: 2px 0 2px 12px;
+      }
+
+      .method-step strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .method-step span {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .bar-row {
+        display: grid;
+        grid-template-columns: 110px 1fr 48px;
+        gap: 10px;
+        align-items: center;
+        margin: 11px 0;
+      }
+
+      .bar-row span {
+        overflow: hidden;
+        color: #344054;
+        font-size: 13px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .bar {
+        height: 10px;
+        border-radius: 999px;
+        background: #e8edf4;
+        overflow: hidden;
+      }
+
+      .bar-fill {
+        height: 100%;
+        background: var(--teal);
+      }
+
+      .footer-note {
+        margin-top: 20px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      @media (max-width: 900px) {
+        .hero { min-height: 72vh; padding: 22px; }
+        .hero-inner { grid-template-columns: 1fr; }
+        .hero-person { justify-self: start; width: min(280px, 72vw); }
+        .hero-person span { text-align: left; }
+        .metrics,
+        .grid.two,
+        .grid.three {
+          grid-template-columns: 1fr;
+        }
+        .section-head {
+          align-items: start;
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <section class="hero">
+      <div class="hero-inner">
+        <div>
+          <p class="eyebrow">Client Demo</p>
+          <h1>YouTube Reputation Intelligence for Thalapathy Vijay</h1>
+          <p class="hero-copy">
+            A daily AI-assisted monitoring workflow that collects YouTube videos and Shorts,
+            writes them to Google Sheets, analyzes sentiment, and highlights risky videos for PR or legal review.
+          </p>
+          <div class="hero-actions">
+            <a id="hero-sheet" class="btn" href="#" target="_blank" rel="noreferrer">Open Google Sheet</a>
+            <a class="btn secondary" href="/youtube-dashboard.html">Open Analyst Dashboard</a>
+          </div>
+        </div>
+        <div class="hero-person">
+          <img src="assets/thalapathy-vijay.jpg" alt="Thalapathy Vijay" />
+          <span>Public image used for identity reference</span>
+        </div>
+      </div>
+    </section>
+
+    <main class="page">
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <h2>Executive Summary</h2>
+            <span id="generated">Loading latest analysis...</span>
+          </div>
+          <span id="coverage"></span>
+        </div>
+        <div class="metrics">
+          <article class="card">
+            <span>Videos Analyzed</span>
+            <strong id="total">0</strong>
+            <small>Latest daily YouTube tab</small>
+          </article>
+          <article class="card">
+            <span>Positive</span>
+            <strong id="positive">0</strong>
+            <small>Supportive or favorable coverage</small>
+          </article>
+          <article class="card">
+            <span>Negative</span>
+            <strong id="negative">0</strong>
+            <small>Critical or risky coverage</small>
+          </article>
+          <article class="card">
+            <span>Risk Score</span>
+            <strong id="risk">0</strong>
+            <small>Weighted by negative share and high-risk videos</small>
+          </article>
+        </div>
+      </section>
+
+      <section class="section grid two">
+        <div class="panel">
+          <h3>Sentiment Split</h3>
+          <canvas id="pie" width="520" height="320"></canvas>
+        </div>
+        <div class="panel">
+          <h3>Risk Trend By Day</h3>
+          <canvas id="trend" width="720" height="320"></canvas>
+        </div>
+      </section>
+
+      <section class="section grid two">
+        <div class="panel">
+          <h3>Top Channels In Latest Batch</h3>
+          <div id="channels"></div>
+        </div>
+        <div class="panel">
+          <h3>System Workflow</h3>
+          <div class="method">
+            <div class="method-step">
+              <strong>1. Collect</strong>
+              <span>Scrapes YouTube videos and Shorts from the latest monitoring window using Vijay, TVK, Thalapathy, politics, CM, and speech keywords.</span>
+            </div>
+            <div class="method-step">
+              <strong>2. Store</strong>
+              <span>Writes every link into Google Sheets with video type, channel, views, likes, comments, and description.</span>
+            </div>
+            <div class="method-step">
+              <strong>3. Analyze</strong>
+              <span>Uses captions/transcripts when available; otherwise analyzes title, channel, and description to score sentiment.</span>
+            </div>
+            <div class="method-step">
+              <strong>4. Prioritize</strong>
+              <span>Highlights negative or high-risk videos with direct YouTube links for PR/legal follow-up.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <h2>Risky Videos For Review</h2>
+            <span>Highest negative percentage and influence signals</span>
+          </div>
+          <span id="risk-count"></span>
+        </div>
+        <div id="risk-list" class="risk-list"></div>
+      </section>
+
+      <section class="section grid three">
+        <article class="panel">
+          <h3>Current Coverage</h3>
+          <p class="summary" id="coverage-copy"></p>
+        </article>
+        <article class="panel">
+          <h3>Client Value</h3>
+          <p class="summary">
+            The client gets daily visibility into what YouTube creators are saying, which links are risky,
+            and where PR/legal teams should focus first.
+          </p>
+        </article>
+        <article class="panel">
+          <h3>Next Upgrade</h3>
+          <p class="summary">
+            Deep audio transcription can be added for Shorts and risky videos to improve accuracy beyond metadata and captions.
+          </p>
+        </article>
+      </section>
+
+      <p class="footer-note">
+        This demo is generated from the connected Google Sheet. The daily automation refreshes the sheet, sentiment analysis,
+        and dashboard data as part of the same workflow.
+      </p>
+    </main>
+
+    <script>
+      const data = window.YOUTUBE_DASHBOARD_DATA;
+      render(data);
+
+      function render(payload) {
+        const latest = payload.latest || {};
+        document.querySelector('#hero-sheet').href = payload.spreadsheetUrl;
+        document.querySelector('#generated').textContent = `Generated ${formatDate(payload.generatedAt)} from Google Sheets`;
+        document.querySelector('#coverage').textContent = `Latest tab: ${latest.date || '-'}`;
+        document.querySelector('#total').textContent = latest.totalVideos || 0;
+        document.querySelector('#positive').textContent = latest.positive || 0;
+        document.querySelector('#negative').textContent = latest.negative || 0;
+        document.querySelector('#risk').textContent = `${latest.riskScore || 0}/100`;
+        document.querySelector('#risk-count').textContent = `${(payload.topRiskyVideos || []).length} videos`;
+        document.querySelector('#coverage-copy').textContent =
+          `Latest batch includes ${latest.totalVideos || 0} YouTube links: ${latest.videos || 0} videos and ${latest.shorts || 0} Shorts. Sentiment split is ${latest.positive || 0} positive, ${latest.negative || 0} negative, and ${latest.neutral || 0} neutral.`;
+        drawPie(latest);
+        drawTrend(payload.days || []);
+        renderChannels(latest.topChannels || []);
+        renderRiskVideos((payload.topRiskyVideos || []).slice(0, 12));
+      }
+
+      function drawPie(day) {
+        const canvas = document.querySelector('#pie');
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const values = [
+          { label: 'Positive', value: day.positive || 0, color: '#15803d' },
+          { label: 'Negative', value: day.negative || 0, color: '#b42318' },
+          { label: 'Neutral', value: day.neutral || 0, color: '#b54708' },
+          { label: 'Mixed', value: day.mixed || 0, color: '#1d4ed8' }
+        ];
+        const total = Math.max(1, values.reduce((sum, item) => sum + item.value, 0));
+        let start = -Math.PI / 2;
+        for (const item of values) {
+          const angle = (item.value / total) * Math.PI * 2;
+          ctx.beginPath();
+          ctx.moveTo(170, 145);
+          ctx.arc(170, 145, 110, start, start + angle);
+          ctx.closePath();
+          ctx.fillStyle = item.color;
+          ctx.fill();
+          start += angle;
+        }
+        values.forEach((item, index) => {
+          ctx.fillStyle = item.color;
+          ctx.fillRect(330, 88 + index * 34, 14, 14);
+          ctx.fillStyle = '#111827';
+          ctx.font = '15px system-ui';
+          ctx.fillText(`${item.label}: ${item.value}`, 354, 100 + index * 34);
+        });
+      }
+
+      function drawTrend(days) {
+        const canvas = document.querySelector('#trend');
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const pad = 42;
+        ctx.fillStyle = '#fbfcfe';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#dde3eb';
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= 4; i++) {
+          const y = pad + i * ((canvas.height - pad * 2) / 4);
+          ctx.beginPath();
+          ctx.moveTo(pad, y);
+          ctx.lineTo(canvas.width - pad, y);
+          ctx.stroke();
+        }
+        ctx.strokeStyle = '#b42318';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        days.forEach((day, index) => {
+          const x = pad + (index * (canvas.width - pad * 2)) / Math.max(1, days.length - 1);
+          const y = canvas.height - pad - ((day.riskScore || 0) / 100) * (canvas.height - pad * 2);
+          if (index === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+          ctx.fillStyle = '#b42318';
+          ctx.beginPath();
+          ctx.arc(x, y, 4, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.fillStyle = '#667085';
+        ctx.font = '13px system-ui';
+        if (days.length) {
+          ctx.fillText(days[0].date, pad, canvas.height - 10);
+          ctx.fillText(days[days.length - 1].date, canvas.width - 120, canvas.height - 10);
+        }
+      }
+
+      function renderChannels(channels) {
+        const max = Math.max(1, ...channels.map(item => item.count));
+        document.querySelector('#channels').innerHTML = channels.map(item => `
+          <div class="bar-row">
+            <span title="${escapeAttr(item.channel)}">${escapeHtml(item.channel)}</span>
+            <div class="bar"><div class="bar-fill" style="width:${Math.max(4, (item.count / max) * 100)}%"></div></div>
+            <strong>${item.count}</strong>
+          </div>
+        `).join('') || '<p class="summary">No channels found.</p>';
+      }
+
+      function renderRiskVideos(videos) {
+        document.querySelector('#risk-list').innerHTML = videos.map(video => `
+          <article class="risk-item">
+            <a href="${escapeAttr(video.url)}" target="_blank" rel="noreferrer">${escapeHtml(video.title)}</a>
+            ${video.narrativeLabel ? `<p class="summary"><strong>Narrative:</strong> ${escapeHtml(video.narrativeLabel)}${video.narrativeSummary ? ` — ${escapeHtml(video.narrativeSummary)}` : ''}</p>` : ''}
+            <p class="summary">${escapeHtml(video.summary || video.reason || 'Marked for review based on negative sentiment score.')}</p>
+            <div class="chips">
+              <span class="chip danger">Negative ${video.negativePct}%</span>
+              ${video.evidenceSource ? `<span class="chip">Source ${escapeHtml(video.evidenceSource)}</span>` : ''}
+              <span class="chip">${escapeHtml(video.channel)}</span>
+              <span class="chip">${escapeHtml(video.youtubeType)}</span>
+              <span class="chip">Views ${video.views}</span>
+              <span class="chip">Comments ${video.comments}</span>
+            </div>
+          </article>
+        `).join('') || '<p class="summary">No risky videos found in the latest analysis.</p>';
+      }
+
+      function formatDate(value) {
+        return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char]));
+      }
+
+      function escapeAttr(value) {
+        return escapeHtml(value).replace(/"/g, '&quot;');
+      }
+    </script>
+  </body>
+</html>

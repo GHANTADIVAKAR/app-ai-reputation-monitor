@@ -1,0 +1,25 @@
+{
+  "name": "reputation-intelligence-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI-powered public sentiment and reputation monitoring dashboard.",
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node server/index.js",
+    "scan": "node server/jobs/run-scan.js",
+    "seed": "node server/jobs/seed.js",
+    "reset-demo": "node server/jobs/reset-demo.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "ai",
+    "sentiment-analysis",
+    "reputation-monitoring",
+    "dashboard",
+    "agents"
+  ],
+  "license": "UNLICENSED"
+}

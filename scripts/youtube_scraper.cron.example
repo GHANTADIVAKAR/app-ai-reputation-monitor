@@ -1,0 +1,2 @@
+# Runs every day at 9:00 AM system time.
+0 9 * * * /Users/ghantadivakar/Documents/Codex/2026-05-01/xhi-so-last-night-i-have/scripts/run_youtube_scraper.sh

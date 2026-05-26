@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: reputation-intelligence-dashboard
+    env: node
+    plan: starter
+    buildCommand: ""
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: SCAN_INTERVAL_HOURS
+        value: 6
+      - key: OPENAI_MODEL
+        value: gpt-4.1-mini
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: SERPAPI_API_KEY
+        sync: false
+      - key: YOUTUBE_API_KEY
+        sync: false
+      - key: ALERT_WEBHOOK_URL
+        sync: false

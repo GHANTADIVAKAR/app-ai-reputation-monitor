@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YouTube Risk Dashboard</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <style>
+      .dashboard-page { margin: 0; padding: 28px; }
+      .dash-header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 18px; }
+      .dash-header h1 { margin-bottom: 6px; }
+      .dash-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 16px; }
+      .dash-card { border: 1px solid var(--line); border-radius: 8px; background: white; padding: 16px; }
+      .dash-card span { color: var(--muted); font-size: 12px; }
+      .dash-card strong { display: block; margin-top: 8px; font-size: 28px; }
+      .dash-two { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 16px; margin-bottom: 16px; }
+      .risk-high { color: var(--red); }
+      .risk-medium { color: var(--amber); }
+      .risk-low { color: var(--green); }
+      .risk-list { display: grid; gap: 10px; }
+      .risk-item { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: #fbfcfe; }
+      .risk-item a { color: var(--text); font-weight: 750; text-decoration: none; }
+      .risk-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+      .bar-row { display: grid; grid-template-columns: 100px 1fr 44px; gap: 10px; align-items: center; margin: 10px 0; }
+      .bar { height: 10px; border-radius: 999px; background: #e5eaf2; overflow: hidden; }
+      .bar-fill { height: 100%; background: var(--blue); }
+      .table-wrap { overflow-x: auto; }
+      table { width: 100%; border-collapse: collapse; font-size: 13px; }
+      th, td { border-bottom: 1px solid var(--line); padding: 10px; text-align: left; vertical-align: top; }
+      th { color: var(--muted); font-size: 12px; }
+      @media (max-width: 920px) {
+        .dashboard-page { padding: 18px; }
+        .dash-grid, .dash-two { grid-template-columns: 1fr; }
+        .dash-header { flex-direction: column; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="dashboard-page">
+      <header class="dash-header">
+        <div>
+          <p class="eyebrow">YouTube Monitor</p>
+          <h1>Thalapathy Vijay Daily Risk Dashboard</h1>
+          <div id="generated" class="source-status">Loading dashboard data...</div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <a href="/client-demo.html" style="display:inline-flex;align-items:center;text-decoration:none;min-height:42px;padding:0 14px;border-radius:8px;background:#111827;color:white;">Client Demo</a>
+          <a id="sheet-link" class="primary" href="#" target="_blank" rel="noreferrer" style="display:inline-flex;align-items:center;text-decoration:none;min-height:42px;padding:0 14px;border-radius:8px;color:white;">Open Sheet</a>
+        </div>
+      </header>
+
+      <section class="dash-grid">
+        <article class="dash-card"><span>Latest Day</span><strong id="latest-date">-</strong></article>
+        <article class="dash-card"><span>Total Videos</span><strong id="total-videos">0</strong></article>
+        <article class="dash-card"><span>Risk Score</span><strong id="risk-score">0</strong></article>
+        <article class="dash-card"><span>Risky Videos</span><strong id="risk-count">0</strong></article>
+      </section>
+
+      <section class="dash-two">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Latest Sentiment</h2>
+            <span>Positive / Negative / Neutral</span>
+          </div>
+          <canvas id="pie" width="420" height="280"></canvas>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Daily Risk Trend</h2>
+            <span>All sheet tabs</span>
+          </div>
+          <canvas id="trend" width="700" height="280"></canvas>
+        </div>
+      </section>
+
+      <section class="dash-two">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Top Channels</h2>
+            <span>Latest day</span>
+          </div>
+          <div id="channels"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Risky YouTube Videos</h2>
+            <span>Links for legal/PR review</span>
+          </div>
+          <div id="risk-list" class="risk-list"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Every Day Analytics</h2>
+          <span>Daily tabs summary</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Total</th>
+                <th>Positive</th>
+                <th>Negative</th>
+                <th>Neutral</th>
+                <th>Risk</th>
+                <th>Risk Level</th>
+              </tr>
+            </thead>
+            <tbody id="day-table"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="/youtube_dashboard_embedded.js"></script>
+    <script>
+      load();
+
+      async function load() {
+        if (window.YOUTUBE_DASHBOARD_DATA) {
+          render(window.YOUTUBE_DASHBOARD_DATA);
+          return;
+        }
+        try {
+          const res = await fetch('/youtube_dashboard_data.json?ts=' + Date.now());
+          const data = await res.json();
+          render(data);
+        } catch (error) {
+          document.querySelector('#generated').textContent = 'Open this dashboard from http://localhost:3000/youtube-dashboard.html or rebuild dashboard data.';
+        }
+      }
+
+      function render(data) {
+        const latest = data.latest || {};
+        document.querySelector('#generated').textContent = 'Generated ' + formatDate(data.generatedAt);
+        document.querySelector('#sheet-link').href = data.spreadsheetUrl;
+        document.querySelector('#latest-date').textContent = latest.date || '-';
+        document.querySelector('#total-videos').textContent = latest.totalVideos || 0;
+        const risk = latest.riskScore || 0;
+        const riskEl = document.querySelector('#risk-score');
+        riskEl.textContent = risk + ' / 100';
+        riskEl.className = 'risk-' + (latest.riskLevel || 'low');
+        document.querySelector('#risk-count').textContent = (latest.riskyVideos || []).length;
+        drawPie(latest);
+        drawTrend(data.days || []);
+        renderChannels(latest.topChannels || []);
+        renderRiskList((data.topRiskyVideos || []).slice(0, 20));
+        renderDayTable(data.days || []);
+      }
+
+      function drawPie(day) {
+        const canvas = document.querySelector('#pie');
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const values = [
+          { label: 'Positive', value: day.positive || 0, color: '#188455' },
+          { label: 'Negative', value: day.negative || 0, color: '#c2413b' },
+          { label: 'Neutral', value: day.neutral || 0, color: '#b7791f' },
+          { label: 'Mixed', value: day.mixed || 0, color: '#2563eb' }
+        ];
+        const total = Math.max(1, values.reduce((sum, item) => sum + item.value, 0));
+        let start = -Math.PI / 2;
+        for (const item of values) {
+          const angle = (item.value / total) * Math.PI * 2;
+          ctx.beginPath();
+          ctx.moveTo(145, 125);
+          ctx.arc(145, 125, 95, start, start + angle);
+          ctx.closePath();
+          ctx.fillStyle = item.color;
+          ctx.fill();
+          start += angle;
+        }
+        values.forEach((item, index) => {
+          ctx.fillStyle = item.color;
+          ctx.fillRect(280, 70 + index * 30, 14, 14);
+          ctx.fillStyle = '#18202f';
+          ctx.font = '14px system-ui';
+          ctx.fillText(`${item.label}: ${item.value}`, 304, 82 + index * 30);
+        });
+      }
+
+      function drawTrend(days) {
+        const canvas = document.querySelector('#trend');
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const pad = 36;
+        const max = Math.max(100, ...days.map(day => day.riskScore || 0));
+        ctx.strokeStyle = '#e5eaf2';
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= 4; i++) {
+          const y = pad + i * ((canvas.height - pad * 2) / 4);
+          ctx.beginPath();
+          ctx.moveTo(pad, y);
+          ctx.lineTo(canvas.width - pad, y);
+          ctx.stroke();
+        }
+        ctx.strokeStyle = '#c2413b';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        days.forEach((day, index) => {
+          const x = pad + (index * (canvas.width - pad * 2)) / Math.max(1, days.length - 1);
+          const y = canvas.height - pad - ((day.riskScore || 0) / max) * (canvas.height - pad * 2);
+          if (index === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+      }
+
+      function renderChannels(channels) {
+        const el = document.querySelector('#channels');
+        el.innerHTML = channels.map(item => `
+          <div class="bar-row">
+            <span>${escapeHtml(item.channel)}</span>
+            <div class="bar"><div class="bar-fill" style="width:${Math.min(100, item.count * 4)}%"></div></div>
+            <strong>${item.count}</strong>
+          </div>
+        `).join('') || '<p class="empty">No channels yet.</p>';
+      }
+
+      function renderRiskList(videos) {
+        const el = document.querySelector('#risk-list');
+        el.innerHTML = videos.map(video => `
+          <article class="risk-item">
+            <a href="${escapeAttr(video.url)}" target="_blank" rel="noreferrer">${escapeHtml(video.title)}</a>
+            ${video.narrativeLabel ? `<p class="summary"><strong>Narrative:</strong> ${escapeHtml(video.narrativeLabel)}${video.narrativeSummary ? ` — ${escapeHtml(video.narrativeSummary)}` : ''}</p>` : ''}
+            <p class="summary">${escapeHtml(video.summary || video.reason || '')}</p>
+            <div class="risk-meta">
+              <span class="chip">Negative ${video.negativePct}%</span>
+              <span class="chip">${escapeHtml(video.sentiment)}</span>
+              ${video.evidenceSource ? `<span class="chip">source ${escapeHtml(video.evidenceSource)}</span>` : ''}
+              <span class="chip">${escapeHtml(video.channel)}</span>
+              <span class="chip">views ${video.views}</span>
+              <span class="chip">${escapeHtml(video.youtubeType)}</span>
+            </div>
+          </article>
+        `).join('') || '<p class="empty">No risky videos yet.</p>';
+      }
+
+      function renderDayTable(days) {
+        document.querySelector('#day-table').innerHTML = days.slice().reverse().map(day => `
+          <tr>
+            <td>${escapeHtml(day.date)}</td>
+            <td>${day.totalVideos}</td>
+            <td>${day.positive}</td>
+            <td>${day.negative}</td>
+            <td>${day.neutral}</td>
+            <td>${day.riskScore}</td>
+            <td>${escapeHtml(day.riskLevel)}</td>
+          </tr>
+        `).join('');
+      }
+
+      function formatDate(value) {
+        if (!value) return '-';
+        return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char]));
+      }
+
+      function escapeAttr(value) {
+        return escapeHtml(value).replace(/"/g, '&quot;');
+      }
+    </script>
+  </body>
+</html>

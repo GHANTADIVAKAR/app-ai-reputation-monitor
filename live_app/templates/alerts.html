@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <p class="eyebrow">Alerts</p>
+    <h1>Risk Alert Rules</h1>
+    <p>Create queued alerts for negative, mixed, high-reach, or keyword-sensitive videos.</p>
+  </div>
+  <form method="post" action="{{ url_for('evaluate_alerts_route', project_id=project.id) }}">
+    <button class="primary" type="submit">Evaluate Alerts</button>
+  </form>
+</header>
+
+<form method="post" class="builder-form">
+  <div class="two-col">
+    <label>Name <input name="name" placeholder="High reach negative video" required></label>
+    <label>Status <select name="status"><option value="active">Active</option><option value="paused">Paused</option></select></label>
+  </div>
+  <div class="two-col">
+    <label>Minimum subscribers <input name="min_subscribers" type="number" value="30000"></label>
+    <label>Minimum views <input name="min_views" type="number" value="10000"></label>
+  </div>
+  <div class="two-col">
+    <label>Sentiment <select name="sentiment"><option value="negative">Negative</option><option value="mixed">Mixed</option><option value="any">Any</option></select></label>
+    <label>Negative % threshold <input name="negative_pct" type="number" value="50"></label>
+  </div>
+  <label>Keywords <textarea name="keywords" rows="3" placeholder="legal, controversy, boycott"></textarea></label>
+  <label>Destination <input name="destination" placeholder="email/whatsapp/slack placeholder"></label>
+  <button class="primary" type="submit">Create Alert Rule</button>
+</form>
+
+<section class="panel table-panel">
+  <div class="panel-head"><h2>Rules</h2></div>
+  <div class="table-wrap"><table><thead><tr><th>Name</th><th>Status</th><th>Thresholds</th><th>Destination</th></tr></thead><tbody>
+    {% for rule in rules %}
+    <tr><td>{{ rule.name }}</td><td>{{ rule.status }}</td><td>{{ rule.sentiment }} · {{ rule.negative_pct }}% neg · {{ rule.min_views|fmt_int }} views · {{ rule.min_subscribers|fmt_int }} subs</td><td>{{ rule.destination }}</td></tr>
+    {% endfor %}
+  </tbody></table></div>
+</section>
+
+<section class="panel table-panel">
+  <div class="panel-head"><h2>Queued Alert Events</h2></div>
+  <div class="table-wrap"><table><thead><tr><th>Rule</th><th>Video</th><th>Status</th><th>Message</th></tr></thead><tbody>
+    {% for event in events %}
+    <tr><td>{{ event.rule_name }}</td><td><a href="{{ event.url }}" target="_blank">{{ event.title }}</a></td><td>{{ event.status }}</td><td>{{ event.message }}</td></tr>
+    {% endfor %}
+  </tbody></table></div>
+</section>
+{% endblock %}

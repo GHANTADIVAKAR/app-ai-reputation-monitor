@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<header class="page-head narrow">
+  <div>
+    <p class="eyebrow">Setup</p>
+    <h1>Create Client Project</h1>
+    <p>Add the person, movie, party, brand, or agency topic to monitor.</p>
+  </div>
+</header>
+
+<form method="post" class="builder-form">
+  <div class="two-col">
+    <label>Project name
+      <input name="name" placeholder="Example: Vijay Thalapathy 2026 Campaign" required>
+    </label>
+    <label>Target type
+      <select name="target_type">
+        <option value="politician">Politician</option>
+        <option value="celebrity">Celebrity</option>
+        <option value="movie">Movie</option>
+        <option value="brand">Brand</option>
+        <option value="agency">Agency</option>
+      </select>
+    </label>
+  </div>
+  <label>Description
+    <textarea name="description" rows="3" placeholder="What this client/project represents"></textarea>
+  </label>
+  <label>Keywords, hashtags, and search phrases
+    <textarea name="keywords" rows="9" placeholder="One keyword per line"></textarea>
+  </label>
+  <label>Relevance terms
+    <textarea name="relevance_terms" rows="5" placeholder="Terms that must appear in title, channel, or description"></textarea>
+  </label>
+  <label>Noise terms to remove
+    <textarea name="noise_terms" rows="5" placeholder="Wrong topics or names to exclude"></textarea>
+  </label>
+  <label>Audio priority subscriber threshold
+    <input name="subscriber_threshold" type="number" min="0" value="30000">
+  </label>
+  <button class="primary" type="submit">Create Project</button>
+</form>
+{% endblock %}
