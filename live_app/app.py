@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import socket
 import sqlite3
 import tempfile
 import time
@@ -31,6 +32,7 @@ DATA_DIR = Path(os.getenv("LIVE_DATA_DIR", str(ROOT / "data"))).expanduser()
 DB_PATH = Path(os.getenv("LIVE_DB_PATH", str(DATA_DIR / "live_app.sqlite3"))).expanduser()
 
 load_dotenv(ROOT / ".env")
+socket.setdefaulttimeout(int(os.getenv("HTTP_TIMEOUT_SECONDS", "45")))
 
 app = Flask(__name__)
 app.secret_key = os.getenv("LIVE_APP_SECRET", "app-ai-local-dev-secret-change-before-production")
@@ -698,7 +700,7 @@ def collect_youtube(project: sqlite3.Row, hours: int) -> dict[str, int]:
     api_key = os.getenv("YOUTUBE_API_KEY", "")
     if not api_key:
         raise RuntimeError("Missing YOUTUBE_API_KEY in .env")
-    youtube = build("youtube", "v3", developerKey=api_key)
+    youtube = build("youtube", "v3", developerKey=api_key, cache_discovery=False)
     started_at = now_iso()
     scan_id = db().execute(
         "INSERT INTO scans (project_id, started_at, hours, status) VALUES (?, ?, ?, ?)",
