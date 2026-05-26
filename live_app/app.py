@@ -1023,10 +1023,10 @@ def download_audio(url: str, video_id: str) -> Path:
         "no_warnings": True,
         "max_filesize": int(os.getenv("AUDIO_MAX_FILESIZE_MB", "24")) * 1024 * 1024,
     }
-    cookies_browser = os.getenv("YTDLP_COOKIES_FROM_BROWSER", "chrome").strip()
-    if cookies_browser:
+    cookies_browser = os.getenv("YTDLP_COOKIES_FROM_BROWSER", "").strip()
+    if cookies_browser and cookies_browser.lower() not in {"0", "false", "none", "off"}:
         options["cookiesfrombrowser"] = (cookies_browser,)
-    js_runtimes = split_lines(os.getenv("YTDLP_JS_RUNTIMES", "node"))
+    js_runtimes = split_lines(os.getenv("YTDLP_JS_RUNTIMES", ""))
     if js_runtimes:
         options["js_runtimes"] = {runtime: {} for runtime in js_runtimes}
     with YoutubeDL(options) as downloader:
