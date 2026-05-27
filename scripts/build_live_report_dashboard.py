@@ -116,6 +116,8 @@ def clean_evidence(source: str, provider: str) -> str:
     provider = (provider or "").strip()
     if source in {"gemini-audio", "openai-audio"}:
         return "audio"
+    if source == "gemini-youtube-video":
+        return "video + audio"
     if source == "youtube-transcript":
         return "transcript"
     if source == "metadata-comments":
@@ -278,7 +280,7 @@ const colors = {positive:'#19a974',negative:'#dc3d4b',neutral:'#7c8a9a',mixed:'#
 new Chart(document.getElementById('sentimentChart'),{type:'doughnut',data:{labels:Object.keys(sc),datasets:[{data:Object.values(sc),backgroundColor:Object.keys(sc).map(k=>colors[k]||'#94a3b8'),borderWidth:0}]},options:{plugins:{legend:{position:'bottom'}},cutout:'64%'}});
 new Chart(document.getElementById('evidenceChart'),{type:'bar',data:{labels:Object.keys(ec),datasets:[{data:Object.values(ec),backgroundColor:'#2563eb',borderRadius:8}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
 const body=document.getElementById('auditBody');let active='all';
-function evidence(row){if(row.evidence_source==='gemini-audio'||row.evidence_source==='openai-audio')return 'audio';if(row.evidence_source==='metadata-comments')return 'metadata + comments';if(row.evidence_source==='metadata')return 'metadata';if(row.evidence_source==='youtube-transcript')return 'transcript';return row.provider==='gemini-text'||row.provider==='openai'?'text':(row.evidence_source||'pending')}
+function evidence(row){if(row.evidence_source==='gemini-audio'||row.evidence_source==='openai-audio')return 'audio';if(row.evidence_source==='gemini-youtube-video')return 'video + audio';if(row.evidence_source==='metadata-comments')return 'metadata + comments';if(row.evidence_source==='metadata')return 'metadata';if(row.evidence_source==='youtube-transcript')return 'transcript';return row.provider==='gemini-text'||row.provider==='openai'?'text':(row.evidence_source||'pending')}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',\"'\":'&#39;'}[m]))}
 function render(){const q=document.getElementById('search').value.toLowerCase();const rows=data.rows.filter(r=>{const ev=evidence(r);const hay=[r.title,r.channel_title,r.sentiment,ev,r.summary,r.reason,r.error].join(' ').toLowerCase();const filter=active==='all'||r.sentiment===active||ev===active||r.analysis_status===active;return filter&&hay.includes(q)});body.innerHTML=rows.map(r=>`<tr><td><a href=\"${esc(r.url)}\" target=\"_blank\">${esc(r.title)}</a><small>${esc(r.youtube_type)} · ${esc(r.published_at)}</small></td><td>${esc(r.channel_title)}<small>${Number(r.subscriber_count||0).toLocaleString()} subscribers</small></td><td class=\"reach\">${Number(r.views||0).toLocaleString()} views<small>${Number(r.comments||0).toLocaleString()} comments</small></td><td>${esc(r.audio_priority)}</td><td><span class=\"badge ${esc(r.sentiment)}\">${esc(r.sentiment)}</span><small>${r.positive_pct}/${r.negative_pct}/${r.neutral_pct}</small></td><td>${esc(evidence(r))}<small>${esc(r.analysis_status)}</small></td><td class=\"summary\">${esc(r.summary||r.error)}<small>${esc(r.reason)}</small></td></tr>`).join('')||'<tr><td colspan=\"7\">No matching rows.</td></tr>'}
 document.getElementById('search').addEventListener('input',render);document.querySelectorAll('.filters button').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.filters button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');active=btn.dataset.filter;render()}));render();

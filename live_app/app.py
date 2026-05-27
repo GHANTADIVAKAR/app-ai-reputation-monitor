@@ -23,8 +23,10 @@ from youtube_transcript_api import YouTubeTranscriptApi
 
 try:
     from google import genai
+    from google.genai import types as genai_types
 except Exception:
     genai = None
+    genai_types = None
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -840,7 +842,7 @@ def analyze_project(project: sqlite3.Row, limit: int, priority_only: bool) -> di
         SELECT 1 FROM analyses done_audio
         WHERE done_audio.video_id = v.id
           AND done_audio.status = 'done'
-          AND done_audio.evidence_source = 'gemini-audio'
+          AND done_audio.evidence_source IN ('gemini-audio', 'gemini-youtube-video')
       )
     """
     query += " ORDER BY COALESCE(v.subscriber_count, 0) DESC, v.views DESC LIMIT ?"
@@ -890,6 +892,8 @@ def analyze_video_with_gemini(project: sqlite3.Row, video: sqlite3.Row) -> dict[
     api_key = os.getenv("GEMINI_API_KEY", "")
     if not api_key:
         raise RuntimeError("Missing GEMINI_API_KEY")
+    if os.getenv("GEMINI_YOUTUBE_URL_ANALYSIS", "1").strip().lower() not in {"0", "false", "no", "off"}:
+        return analyze_youtube_url_with_gemini(project, video, api_key)
     audio_path = download_audio(video["url"], video["video_id"])
     try:
         client = genai.Client(api_key=api_key)
@@ -920,6 +924,67 @@ def analyze_video_with_gemini(project: sqlite3.Row, video: sqlite3.Row) -> dict[
             audio_path.unlink(missing_ok=True)
         except Exception:
             pass
+
+
+def analyze_youtube_url_with_gemini(project: sqlite3.Row, video: sqlite3.Row, api_key: str) -> dict[str, Any]:
+    if genai_types is None:
+        raise RuntimeError("google-genai types package not installed")
+    client = genai.Client(api_key=api_key)
+    prompt = json.dumps({
+        "task": f"Watch/analyze the full public YouTube video and judge sentiment and narrative toward {project['name']}.",
+        "rules": [
+            "Use the video's spoken audio, visuals, title, and description when available.",
+            "Focus on the creator/video narrative, not only audience comments.",
+            "Return JSON only.",
+            "If the video is unavailable or evidence is weak, mark neutral or mixed with lower confidence.",
+        ],
+        "video": {
+            "title": video["title"],
+            "channel": video["channel_title"],
+            "url": video["url"],
+            "views": video["views"],
+            "comments": video["comments"],
+        },
+        "required_json": {
+            "sentiment": "positive|negative|neutral|mixed",
+            "positive_pct": "0-100",
+            "negative_pct": "0-100",
+            "neutral_pct": "0-100",
+            "confidence": "0-100",
+            "summary": "short summary of what the video says/shows",
+            "reason": "why this sentiment",
+            "narrative_label": "short label",
+            "narrative_summary": "main story or angle",
+        },
+    }, ensure_ascii=False)
+    contents = [
+        genai_types.Part.from_uri(file_uri=video["url"], mime_type="video/*"),
+        prompt,
+    ]
+    response = None
+    errors = []
+    for model in gemini_models():
+        try:
+            response = client.models.generate_content(model=model, contents=contents)
+            break
+        except Exception as error:
+            errors.append(f"{model}: {str(error)[:220]}")
+    if response is None:
+        raise RuntimeError("Gemini YouTube URL analysis failed: " + " | ".join(errors))
+    return parse_json(response.text or "{}") | {"provider": "gemini", "evidence_source": "gemini-youtube-video"}
+
+
+def gemini_models() -> list[str]:
+    configured = split_lines(os.getenv("GEMINI_MODELS", ""))
+    if configured:
+        return configured
+    primary = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
+    fallback = split_lines(os.getenv("GEMINI_FALLBACK_MODELS", "gemini-2.0-flash\ngemini-2.0-flash-lite"))
+    out = []
+    for model in [primary, *fallback]:
+        if model and model not in out:
+            out.append(model)
+    return out
 
 
 def analyze_video_text(project: sqlite3.Row, video: sqlite3.Row) -> dict[str, Any]:
