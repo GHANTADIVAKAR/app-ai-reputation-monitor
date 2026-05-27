@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import html
 import json
+import os
 import sqlite3
 from collections import Counter
 from datetime import datetime
@@ -10,7 +11,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DB_PATH = ROOT / "data" / "live_app.sqlite3"
+DATA_DIR = Path(os.getenv("LIVE_DATA_DIR", str(ROOT / "data"))).expanduser()
+DB_PATH = Path(os.getenv("LIVE_DB_PATH", str(DATA_DIR / "live_app.sqlite3"))).expanduser()
 OUTPUT_PATH = ROOT / "public" / "ntr-dragon-dashboard.html"
 
 
