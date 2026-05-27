@@ -830,12 +830,19 @@ def fetch_channel_stats(youtube: Any, channel_ids: list[str]) -> dict[str, int |
 def analyze_project(project: sqlite3.Row, limit: int, priority_only: bool) -> dict[str, int]:
     query = """
       SELECT v.* FROM videos v
-      LEFT JOIN analyses a ON a.video_id = v.id AND a.id = (SELECT max(id) FROM analyses WHERE video_id = v.id)
-      WHERE v.project_id = ? AND (a.status IS NULL OR a.status = 'failed')
+      WHERE v.project_id = ?
     """
     params: list[Any] = [project["id"]]
     if priority_only:
         query += " AND v.audio_priority = 'yes'"
+    query += """
+      AND NOT EXISTS (
+        SELECT 1 FROM analyses done_audio
+        WHERE done_audio.video_id = v.id
+          AND done_audio.status = 'done'
+          AND done_audio.evidence_source = 'gemini-audio'
+      )
+    """
     query += " ORDER BY COALESCE(v.subscriber_count, 0) DESC, v.views DESC LIMIT ?"
     params.append(limit)
     videos = db().execute(query, params).fetchall()
